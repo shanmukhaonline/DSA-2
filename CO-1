@@ -1,0 +1,72 @@
+import java.util.*;
+
+class CacheEntry {
+    String domain;
+    long exp;
+    Object record;
+
+    CacheEntry(String domain, long exp, Object record) {
+        this.domain = domain;
+        this.exp = exp;
+        this.record = record;
+    }
+}
+
+public class DnsCache {
+
+    PriorityQueue<CacheEntry> heap =
+            new PriorityQueue<>(Comparator.comparingLong(e -> e.exp));
+
+    Map<String, CacheEntry> byDomain = new HashMap<>();
+
+    public void put(String domain, long exp, Object record) {
+        CacheEntry entry = new CacheEntry(domain, exp, record);
+
+        byDomain.put(domain, entry);
+        heap.offer(entry);
+    }
+
+    public List<String> evictExpired(long now) {
+
+        List<String> evicted = new ArrayList<>();
+
+        while (!heap.isEmpty() && heap.peek().exp <= now) {
+
+            CacheEntry e = heap.poll();
+
+            CacheEntry current = byDomain.get(e.domain);
+
+            if (current == null || current.exp != e.exp) {
+                continue;
+            }
+
+            byDomain.remove(e.domain);
+            evicted.add(e.domain);
+        }
+
+        return evicted;
+    }
+
+    public static void main(String[] args) {
+
+        DnsCache cache = new DnsCache();
+
+        cache.put("google.com", 1700000060, null);
+        cache.put("github.com", 1700000045, null);
+        cache.put("slack.com", 1700000090, null);
+        cache.put("kl.ac.in", 1700000030, null);
+        cache.put("jio.com", 1700000075, null);
+        cache.put("hdfc.in", 1700000020, null);
+        cache.put("amazon.in", 1700000055, null);
+        cache.put("netflix.com", 1700000040, null);
+
+        long now = 1700000030;
+
+        List<String> removed = cache.evictExpired(now);
+
+        System.out.println("Evicted Domains:");
+        for (String d : removed) {
+            System.out.println(d);
+        }
+    }
+}
