@@ -1,0 +1,85 @@
+import java.util.*;
+
+public class TwitterReachPrediction {
+
+    static Set<String> bfsBounded(
+            Map<String, List<String>> adj,
+            String source,
+            int maxDepth) {
+
+        Set<String> visited = new HashSet<>();
+        visited.add(source);
+
+        Queue<Object[]> queue = new LinkedList<>();
+        queue.offer(new Object[]{source, 0});
+
+        Set<String> reached = new HashSet<>();
+
+        while (!queue.isEmpty()) {
+
+            Object[] cur = queue.poll();
+
+            String user = (String) cur[0];
+            int depth = (int) cur[1];
+
+            if (!user.equals(source))
+                reached.add(user);
+
+            if (depth == maxDepth)
+                continue;
+
+            for (String neighbor :
+                    adj.getOrDefault(user,
+                            Collections.emptyList())) {
+
+                if (!visited.contains(neighbor)) {
+
+                    visited.add(neighbor);
+
+                    queue.offer(
+                            new Object[]{
+                                    neighbor,
+                                    depth + 1
+                            });
+                }
+            }
+        }
+
+        return reached;
+    }
+
+    public static void main(String[] args) {
+
+        Map<String, List<String>> graph =
+                new HashMap<>();
+
+        graph.put("A",
+                Arrays.asList("B", "C"));
+
+        graph.put("B",
+                Arrays.asList("D", "E"));
+
+        graph.put("C",
+                Arrays.asList("E", "F"));
+
+        graph.put("D",
+                Arrays.asList("G"));
+
+        graph.put("E",
+                Arrays.asList("G", "H"));
+
+        graph.put("F",
+                Arrays.asList("H", "I"));
+
+        Set<String> reach =
+                bfsBounded(graph, "A", 3);
+
+        System.out.println(
+                "Users reached within 3 hops:");
+
+        System.out.println(reach);
+
+        System.out.println(
+                "Total Reach = " + reach.size());
+    }
+}
